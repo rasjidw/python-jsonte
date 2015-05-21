@@ -7,6 +7,7 @@ import json
 
 # 3rd party
 import dateutil.parser
+import dateutil.tz
 
 # ours
 from jsonte.core import JsonteDict, JsonteEncoder, JsonteTypeRegister
