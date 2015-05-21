@@ -26,14 +26,14 @@ class JsonTypeRegister(object):
         self._serialisers.append((cls, obj_to_dict_func))
     def add_deserialiser(self, name, dict_to_obj_func):
         self._deserialisers.append((name, dict_to_obj_func))
-    def jsonts_default(self, obj):
+    def jsonte_default(self, obj):
         for cls, obj_to_dict_func in self._serialisers:
             if isinstance(obj, cls):
                 return obj_to_dict_func(obj)
         if self.default_func:
             return self.default_func(obj)
         raise TypeError(repr(obj) + " is not Json serialisable")
-    def jsonts_objecthook(self, dct):
+    def jsonte_objecthook(self, dct):
         assert isinstance(dct, dict)
         for keyname, dict_to_obj_func in self._deserialisers:
             if keyname in dct.keys():
@@ -73,10 +73,10 @@ def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True,
         encoding='utf-8', sort_keys=False, **kw):
     return json.dumps(obj, skipkeys=skipkeys, ensure_ascii=ensure_ascii, check_circular=check_circular,
         allow_nan=allow_nan, cls=cls, indent=indent, separators=separators,
-        encoding=encoding, default=json_type_register.jsonts_default, sort_keys=sort_keys, **kw)
+        encoding=encoding, default=json_type_register.jsonte_default, sort_keys=sort_keys, **kw)
 
 def loads(s, encoding=None, cls=None, parse_float=None, parse_int=None, parse_constant=None, **kw):
-    return json.loads(s, encoding=encoding, cls=cls, object_hook=json_type_register.jsonts_objecthook,
+    return json.loads(s, encoding=encoding, cls=cls, object_hook=json_type_register.jsonte_objecthook,
                       parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
 
 # ----------------------------------
