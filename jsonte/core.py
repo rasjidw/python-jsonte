@@ -2,11 +2,9 @@
 import json
 
 class JsonteTypeRegister(object):
-    def __init__(self, reserved_initial_chars = '$@#%*', escape_char = '$'):
+    def __init__(self, reserved_initial_chars = '#', escape_char = '~'):
         if not isinstance(escape_char, basestring) or len(escape_char) != 1:
             raise ValueError('escape_char must be a single character')
-        if escape_char not in reserved_initial_chars:
-            raise ValueError('escape_char must be in the reserved_initial_chars')
 
         self.reserved_initial_chars = reserved_initial_chars
         self.escape_char = escape_char
@@ -53,7 +51,7 @@ class JsonteEncoder(json.JSONEncoder):
             indent=None, separators=None, encoding='utf-8'):
         assert isinstance(jsonte_type_register, JsonteTypeRegister)
         self.jsonte_type_register = jsonte_type_register
-        self.reserved_initial_chars = self.jsonte_type_register.reserved_initial_chars
+        self.chars_to_escape = self.jsonte_type_register.reserved_initial_chars + self.jsonte_type_register.escape_char
         self.escape_char = self.jsonte_type_register.escape_char
         self.jsonte_serialisers = self.jsonte_type_register._serialisers
 
@@ -72,7 +70,7 @@ class JsonteEncoder(json.JSONEncoder):
         if isinstance(obj, dict) and not isinstance(obj, JsonteDict):
             # prefix any keys starting with something in reserved_initial_chars with the escape char
             keys_to_escape = [ key for key in obj if isinstance(key, basestring) and
-                                            key[0] in self.reserved_initial_chars ]
+                                            key[0] in self.chars_to_escape ]
             if keys_to_escape:
                 new_dct = obj.copy()
                 for key in keys_to_escape:
