@@ -39,7 +39,7 @@ class JsonteTypeRegister(object):
         for keyname, dict_to_obj_func in self._deserialisers:
             if keyname in dct:
                 return dict_to_obj_func(dct)
-        for key in dct:
+        for key in dct.keys():   # don't iterate - must use .keys() here, since we are modifying the keys in place
             if key[0] == self.escape_char:
                 dct[key[1:]] = dct.pop(key)
         return dct
