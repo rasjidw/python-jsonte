@@ -10,7 +10,9 @@ class JsonteTypeRegister(object):
         self.escape_char = escape_char
 
         self._serialisers = list()  # list of tuples ( Class , function that converts the object to a dict )
-        self._deserialisers = []  # list of tuples ( #name , function that returns the object )
+        self._deserialisers = list()  # list of tuples ( #name , function that returns the object )
+        self._names = set()
+        self._object_classes = set()
 
     def add_serialiser(self, obj_cls, obj_to_jsontedict_func):
         """
@@ -23,14 +25,19 @@ class JsonteTypeRegister(object):
               For example, a datetime.datetime instance is both a datetime.datetime, and a datetime.date, so for
               correct serialisation the serialiser for datetime.datetime must be added first.
         """
+        if obj_cls in self._object_classes:
+            raise ValueError('class %s already added' % obj_cls.__name__)
         self._serialisers.append((obj_cls, obj_to_jsontedict_func))
     def add_deserialiser(self, name, dict_to_obj_func):
         if not name:
             raise ValueError('name must be at least one char long')
         if name[0] not in self.reserved_initial_chars:
             raise ValueError('name must start with a reserved char')
-        if len(name) >= 2 and name[1] in self.reserved_initial_chars:
-            raise ValueError('the 2nd char of the name must not be a reserved char')
+        if len(name) >= 2 and name[1] == self.escape_char:
+            raise ValueError('the 2nd char of the name must not be the escape char')
+        if name in self._names:
+            raise ValueError('name %s already added' % name)
+        self._names.add(name)
         self._deserialisers.append((name, dict_to_obj_func))
     def _jsonte_objecthook(self, dct):
         assert isinstance(dct, dict)
