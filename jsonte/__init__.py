@@ -7,7 +7,6 @@ import json
 
 # 3rd party
 import dateutil.parser
-import dateutil.tz
 
 # ours
 from jsonte.core import JsonteDict, JsonteEncoder, JsonteTypeRegister
@@ -113,6 +112,10 @@ def loads(s, encoding=None, cls=None, parse_float=None, parse_int=None, parse_co
 
 def test():
     from pprint import pprint
+    import dateutil.tz
+
+#    jsonte_type_register.escape_char = '#'
+
     d = dict(cost=decimal.Decimal('10.0200'),
              discounted=True,
              now=datetime.datetime.now(),
@@ -120,7 +123,7 @@ def test():
              today = datetime.date.today(),
              binary = bytearray('Hello World!\x00\x01\x02')
              )
-    d['%foo'] = 'bar'
+    d['~foo'] = 'bar'
     d['#num'] = 'aaa'
     d['*ent'] = 'entity'
 
@@ -135,6 +138,9 @@ def test():
     d2 = loads(s)
 
     print 'd == d2:', d == d2
+    if d != d2:
+        print 'FAIL!'
+        pprint(d2)
 
 if __name__=='__main__':
     test()
