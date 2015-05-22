@@ -25,6 +25,10 @@ class JsonteTypeRegister(object):
               For example, a datetime.datetime instance is both a datetime.datetime, and a datetime.date, so for
               correct serialisation the serialiser for datetime.datetime must be added first.
         """
+
+        # FIXME: We can probably lift the requirement on ordering by using a digraph / partial order sort
+        # See https://pypi.python.org/pypi/digraphtools for one possible option?
+
         if obj_cls in self._object_classes:
             raise ValueError('class %s already added' % obj_cls.__name__)
         self._serialisers.append((obj_cls, obj_to_jsontedict_func))
