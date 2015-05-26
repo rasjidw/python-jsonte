@@ -108,41 +108,5 @@ def loads(s, encoding=None, cls=None, parse_float=None, parse_int=None, parse_co
     return json.loads(s, encoding=encoding, cls=cls, object_hook=jsonte_type_register._jsonte_objecthook,
                       parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
 
-# ----------------------------------
-
-def test():
-    from pprint import pprint
-    import dateutil.tz
-
-#    jsonte_type_register.escape_char = '#'
-
-    d = dict(cost=decimal.Decimal('10.0200'),
-             discounted=True,
-             now=datetime.datetime.now(),
-             now_with_tz = datetime.datetime.now(dateutil.tz.gettz('Australia/Victoria')),
-             today = datetime.date.today(),
-             binary = bytearray('Hello World!\x00\x01\x02')
-             )
-    d['~foo'] = 'bar'
-    d['#num'] = 'aaa'
-    d['*ent'] = 'entity'
-
-    print 'Data is:'
-    pprint(d)
-    print
-
-    s = dumps(d)
-    print 'Jsonte is:'
-    print s
-
-    d2 = loads(s)
-
-    print 'd == d2:', d == d2
-    if d != d2:
-        print 'FAIL!'
-        pprint(d2)
-
-if __name__=='__main__':
-    test()
 
 
