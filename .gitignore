@@ -3,3 +3,7 @@
 virt_jsonts
 deps
 zz*
+build
+dist
+jsonte.egg-info
+*.stackdump
