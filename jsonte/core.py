@@ -1,4 +1,6 @@
 
+__all__ = ['JsonteTypeRegister', 'JsonteDict', 'JsonteEncoder']
+
 import json
 
 class JsonteTypeRegister(object):

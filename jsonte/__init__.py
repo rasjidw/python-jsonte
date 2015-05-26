@@ -11,6 +11,7 @@ import dateutil.parser
 # ours
 from jsonte.core import JsonteDict, JsonteEncoder, JsonteTypeRegister
 
+__all__ = ['jsonte_type_register', 'dumps', 'loads', 'JsonteDict', 'JsonteEncoder', 'JsonteTypeRegister']
 
 jsonte_type_register = JsonteTypeRegister()
 
