@@ -98,16 +98,33 @@ jsonte_type_register.add_deserialiser('#bin', binary_deserialiser)
 
 # ---------------------------------
 
+def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
+        allow_nan=True, indent=None, separators=None,
+        encoding='utf-8', sort_keys=False, type_register = jsonte_type_register):
+    iterable = JsonteEncoder(type_register, skipkeys=skipkeys, ensure_ascii=ensure_ascii,
+                check_circular=check_circular, allow_nan=allow_nan, indent=indent,
+                separators=separators, encoding=encoding, sort_keys=sort_keys).iterencode(obj)
+    for chunk in iterable:
+        fp.write(chunk)
+
+
 def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True,
-        allow_nan=True, cls=None, indent=None, separators=None,
-        encoding='utf-8', sort_keys=False, **kw):
-    return JsonteEncoder(jsonte_type_register, skipkeys=skipkeys, ensure_ascii=ensure_ascii,
+        allow_nan=True, indent=None, separators=None,
+        encoding='utf-8', sort_keys=False, type_register = jsonte_type_register):
+    return JsonteEncoder(type_register, skipkeys=skipkeys, ensure_ascii=ensure_ascii,
                          check_circular=check_circular, allow_nan=allow_nan, indent=indent,
                          separators=separators, encoding=encoding, sort_keys=sort_keys).encode(obj)
 
-def loads(s, encoding=None, cls=None, parse_float=None, parse_int=None, parse_constant=None, **kw):
-    return json.loads(s, encoding=encoding, cls=cls, object_hook=jsonte_type_register._jsonte_objecthook,
-                      parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
 
+def load(fp, encoding=None, cls=None, parse_float=None, parse_int=None, parse_constant=None,
+         type_register = jsonte_type_register, **kw):
+    return json.load(fp, encoding=encoding, cls=cls, object_hook=type_register._jsonte_objecthook,
+                     parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
+
+
+def loads(s, encoding=None, cls=None, parse_float=None, parse_int=None, parse_constant=None,
+          type_register = jsonte_type_register, **kw):
+    return json.loads(s, encoding=encoding, cls=cls, object_hook=type_register._jsonte_objecthook,
+                      parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
 
 

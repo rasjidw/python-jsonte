@@ -10,6 +10,7 @@ Tests for `jsonte` module.
 
 import datetime
 import decimal
+import tempfile
 import unittest
 
 import dateutil.tz
@@ -68,6 +69,18 @@ class TestJsonte(unittest.TestCase):
         via_json = json.loads(jsonte.dumps(data))
         self.assertEqual(via_json, data)
 
+    def test_dump_and_load(self):
+        data = { 'now': datetime.datetime.now(),
+                 'number': decimal.Decimal('10.00'),
+                 '#escape': 'test',
+                 '~tilde_test': 'aaa',
+                 'binary': bytearray('\x00\x01')
+                  }
+        with tempfile.TemporaryFile() as fp:
+            jsonte.dump(data, fp)
+            fp.seek(0)
+            round_trip = jsonte.load(fp)
+            self.assertEqual(data, round_trip)
 
 class TestCustomEscape(unittest.TestCase):
 
