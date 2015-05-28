@@ -58,8 +58,9 @@ The python implementation is designed to be a drop-in replacement for the standa
    import dateutil.tz
    import jsonte
 
+   timezone = dateutil.tz.gettz('Australia/Victoria')
    data = { 'now': datetime.datetime.now(),
-            'now_with_tz': datetime.datetime.now(dateutil.tz.gettz('Australia/Victoria')),
+            'now_with_tz': datetime.datetime.now(timezone),
             'today': datetime.date.today(),
             'the_time': datetime.datetime.now().time(),
             'cost': decimal.Decimal('12.50'),
@@ -71,7 +72,10 @@ The python implementation is designed to be a drop-in replacement for the standa
    s = jsonte.dumps(data, indent=4, sort_keys=True)
    data2 = jsonte.loads(s)
 
-At this point we have::
+At this point we have
+
+::
+
    >>> data is data2
    False
    >>> data == data2
