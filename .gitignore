@@ -1,6 +1,6 @@
 .idea
 *.pyc
-virt_jsonts
+virt_*
 deps
 zz*
 build
