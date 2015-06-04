@@ -3,9 +3,10 @@
 History
 -------
 
-0.8.1 (2015-06-04)
+0.8.2 (2015-06-04)
 ------------------
 * Rename JsonteDict to SerialisationDict to add clarity.
+* Give access to the registered type classes.
 
 
 0.8.0 (2015-05-22)
