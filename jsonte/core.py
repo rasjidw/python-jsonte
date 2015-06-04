@@ -17,7 +17,10 @@ class JsonteTypeRegister(object):
         self._serialisers = list()  # list of tuples ( Class , function that converts the object to a dict )
         self._deserialisers = list()  # list of tuples ( #name , function that returns the object )
         self._names = set()
-        self._object_classes = set()
+        self._type_classes = set()
+    
+    def get_type_classes(self):
+        return self._type_classes
 
     def add_serialiser(self, obj_cls, obj_to_jsontedict_func):
         """
@@ -34,8 +37,9 @@ class JsonteTypeRegister(object):
         # FIXME: We can probably lift the requirement on ordering by using a digraph / partial order sort
         # See https://pypi.python.org/pypi/digraphtools for one possible option?
 
-        if obj_cls in self._object_classes:
+        if obj_cls in self._type_classes:
             raise ValueError('class %s already added' % obj_cls.__name__)
+        self._type_classes.add(obj_cls)
         self._serialisers.append((obj_cls, obj_to_jsontedict_func))
     def add_deserialiser(self, name, dict_to_obj_func):
         if not name:
