@@ -9,15 +9,15 @@ import json
 import dateutil.parser
 
 # ours
-from jsonte.core import JsonteDict, JsonteEncoder, JsonteTypeRegister
+from jsonte.core import SerialisationDict, JsonteEncoder, JsonteTypeRegister
 
-__all__ = ['jsonte_type_register', 'dumps', 'loads', 'JsonteDict', 'JsonteEncoder', 'JsonteTypeRegister']
+__all__ = ['jsonte_type_register', 'dumps', 'loads', 'SerialisationDict', 'JsonteEncoder', 'JsonteTypeRegister']
 
 jsonte_type_register = JsonteTypeRegister()
 
 # numeric ( python decimal.Decimal )
 def decimal_serialiser(num):
-    dct = JsonteDict()
+    dct = SerialisationDict()
     dct['#num'] = str(num)
     return dct
 
@@ -33,7 +33,7 @@ jsonte_type_register.add_deserialiser('#num', decimal_deserialiser)
 
 # timestamp ( python datetime.datetime )
 def timestamp_serialiser(tstamp):
-    dct = JsonteDict()
+    dct = SerialisationDict()
     dct['#tstamp'] = tstamp.isoformat()
     return dct
 
@@ -49,7 +49,7 @@ jsonte_type_register.add_deserialiser('#tstamp', timestamp_deserialiser)
 
 # date
 def date_serialiser(dte):
-    dct = JsonteDict()
+    dct = SerialisationDict()
     dct['#date'] = dte.isoformat()
     return dct
 
@@ -65,7 +65,7 @@ jsonte_type_register.add_deserialiser('#date', date_deserialiser)
 
 # time
 def time_serialiser(the_time):
-    dct = JsonteDict()
+    dct = SerialisationDict()
     dct['#time'] = the_time.isoformat()
     return dct
 
@@ -81,7 +81,7 @@ jsonte_type_register.add_deserialiser('#time', time_deserialiser)
 
 # binary  ( python bytearray - 2.6 and higher )
 def binary_serialiser(bin):
-    dct = JsonteDict()
+    dct = SerialisationDict()
     dct['#bin'] = base64.b64encode(bin)
     return dct
 
