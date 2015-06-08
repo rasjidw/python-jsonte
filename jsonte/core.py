@@ -1,9 +1,12 @@
 
-__all__ = ['JsonteTypeRegister', 'SerialisationDict', 'JsonteEncoder']
+__all__ = ['JsonteTypeRegister', 'PreEscapedKeysMixin', 'SerialisationDict', 'JsonteEncoder']
 
 import json
 
-class SerialisationDict(dict):
+class PreEscapedKeysMixin(object):
+    pass
+
+class SerialisationDict(dict, PreEscapedKeysMixin):
     pass
 
 class JsonteTypeRegister(object):
@@ -79,12 +82,12 @@ class JsonteEncoder(json.JSONEncoder):
         for cls, obj_to_jsontedict_func in self.jsonte_serialisers:
             if isinstance(obj, cls):
                 value = obj_to_jsontedict_func(obj)
-                if not isinstance(value, SerialisationDict):
-                    raise TypeError('serialisers must return a SerialisationDict')
+                if not isinstance(value, PreEscapedKeysMixin) or not isinstance(value, dict):
+                    raise TypeError('serialisers must return subclass of both dict and PreEscapedKeysMixin')
                 return value
         return json.JSONEncoder.default(self, obj)
     def iterencode(self, obj, _one_shot=False):
-        if isinstance(obj, dict) and not isinstance(obj, SerialisationDict):
+        if isinstance(obj, dict) and not isinstance(obj, PreEscapedKeysMixin):
             # prefix any keys starting with something in reserved_initial_chars with the escape char
             keys_to_escape = [ key for key in obj if isinstance(key, basestring) and
                                             key[0] in self.chars_to_escape ]
