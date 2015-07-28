@@ -20,9 +20,6 @@ class SerialisationDict(dict, PreEscapedKeysMixin):
 
 class JsonteSerialiser(object):
     def __init__(self, reserved_initial_chars='#', escape_char='~'):
-        if not isinstance(escape_char, basestring) or len(escape_char) != 1:
-            raise ValueError('escape_char must be a single character')
-
         self.reserved_initial_chars = reserved_initial_chars
         self.escape_char = escape_char
 
@@ -72,9 +69,10 @@ class JsonteSerialiser(object):
         for keyname, dict_to_obj_func in self._deserialisers:
             if keyname in dct:
                 return dict_to_obj_func(dct)
-        for key in dct.keys():   # don't iterate - must use .keys() here, since we are modifying the keys in place
-            if key[0] == self.escape_char:
-                dct[key[1:]] = dct.pop(key)
+        if self.escape_char:
+            for key in dct.keys():   # don't iterate - must use .keys() here, since we are modifying the keys in place
+                if key[0] == self.escape_char:
+                    dct[key[1:]] = dct.pop(key)
         return dct
     
     def _add_standard_types(self):
@@ -136,7 +134,7 @@ class _JsonteEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
     def iterencode(self, obj, _one_shot=False):
-        if isinstance(obj, dict) and not isinstance(obj, PreEscapedKeysMixin):
+        if isinstance(obj, dict) and not isinstance(obj, PreEscapedKeysMixin) and self.jsonte_serialiser.escape_char:
             # prefix any keys starting with something in reserved_initial_chars with the escape char
             keys_to_escape = [key for key in obj if isinstance(key, basestring) and key[0] in self.chars_to_escape]
             if keys_to_escape:

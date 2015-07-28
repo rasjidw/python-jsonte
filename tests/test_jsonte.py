@@ -100,5 +100,37 @@ class TestCustomEscape(unittest.TestCase):
         self.assertEqual(via_json, {'~*foo': 'bar'})
 
 
+class TestNoEscape(unittest.TestCase):
+    def setUp(self):
+        self.serialiser = jsonte.JsonteSerialiser(escape_char='')
+
+    def test_no_escape_simple(self):
+        data = {'#foo': 'bar'}
+        jsonte_str = self.serialiser.dumps(data)
+        round_trip = self.serialiser.loads(jsonte_str)
+        via_json = json.loads(jsonte_str)
+        self.assertEqual(data, round_trip)
+        self.assertEqual(via_json, {'#foo': 'bar'})
+
+    def test_no_escape_complex(self):
+        data = {'now': datetime.datetime.now(),
+                'number': decimal.Decimal('10.00'),
+                '#escape': 'test',
+                '~tilde_test': 'aaa',
+                'binary': bytearray('\x00\x01')
+                }
+        jsonte_str = self.serialiser.dumps(data)
+        round_trip = self.serialiser.loads(jsonte_str)
+        self.assertEqual(data, round_trip)
+
+    def test_round_trip_fail(self):
+        data = {'#num': 'aaa'}
+        jsonte_str = self.serialiser.dumps(data)
+        via_json = json.loads(jsonte_str)
+        self.assertEqual(via_json, {'#num': 'aaa'})
+        with self.assertRaises(decimal.InvalidOperation):
+            self.serialiser.loads(jsonte_str)
+
+
 if __name__ == '__main__':
     unittest.main()
