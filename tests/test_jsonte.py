@@ -146,6 +146,22 @@ class TestWebsafety(unittest.TestCase):
         first_line = jsonte_str.splitlines()[0]
         self.assertEqual(first_line, ")]}',")
 
+class TestCustomObjectHook(unittest.TestCase):
+    def test_custom_objecthook(self):
+        class Foo(object):
+            pass
+
+        def foo_hook(dct):
+            if '**foo**' in dct:
+                return Foo()
+            return None
+
+        serialiser = jsonte.JsonteSerialiser(custom_objecthook=foo_hook)
+        data = [{'**foo**': 1}, {'**bar**': 2} ]
+        raw_json = json.dumps(data)
+        list_back = serialiser.loads(raw_json)
+        self.assertIsInstance(list_back[0], Foo)
+        self.assertEqual(list_back[1], {'**bar**': 2})
 
 if __name__ == '__main__':
     unittest.main()

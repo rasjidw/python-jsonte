@@ -19,9 +19,21 @@ class SerialisationDict(dict, PreEscapedKeysMixin):
 
 
 class JsonteSerialiser(object):
-    def __init__(self, reserved_initial_chars='#', escape_char='~', array_websafety=None,
+    def __init__(self, reserved_initial_chars='#', escape_char='~', array_websafety=None, custom_objecthook=None,
                  skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True,
                  indent=None, separators=None, encoding='utf-8', sort_keys=False):
+        """
+        :param reserved_initial_chars: object keys starting with one of these characters will get escaped
+                                       as will keys starting with the escape character
+        :param escape_char: the escape character
+        :param array_websafety: if 'exception', raises a RuntimeError if the top-level item is a list
+                                if 'prefix', prefixes top level arrays with )]}', as per AngularJS
+                                if None (or evaluates to False) no changes are made
+        :param custom_objecthook: is passed a dict, and should return either the custom object resulting, or None
+                                  this is called after the conversion of any registered type deserialisers,
+                                  but prior to the un-escaping of any object keys
+        The rest of the paramaters are passed into json.dump(s) on each call.
+        """
         self.reserved_initial_chars = reserved_initial_chars
         self.escape_char = escape_char
         if array_websafety and array_websafety not in ('exception', 'prefix'):
@@ -37,6 +49,7 @@ class JsonteSerialiser(object):
         self.separators = separators
         self.encoding = encoding
         self.sort_keys = sort_keys
+        self.custom_objecthook = custom_objecthook
 
         self._serialisers = list()  # list of tuples ( Class , function that converts the object to a dict )
         self._deserialisers = list()  # list of tuples ( #name , function that returns the object )
@@ -84,6 +97,10 @@ class JsonteSerialiser(object):
         for keyname, dict_to_obj_func in self._deserialisers:
             if keyname in dct:
                 return dict_to_obj_func(dct)
+        if self.custom_objecthook:
+            obj = self.custom_objecthook(dct)
+            if obj is not None:
+                return obj
         if self.escape_char:
             for key in dct.keys():   # don't iterate - must use .keys() here, since we are modifying the keys in place
                 if key[0] == self.escape_char:
