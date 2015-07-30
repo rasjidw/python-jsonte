@@ -19,9 +19,24 @@ class SerialisationDict(dict, PreEscapedKeysMixin):
 
 
 class JsonteSerialiser(object):
-    def __init__(self, reserved_initial_chars='#', escape_char='~'):
+    def __init__(self, reserved_initial_chars='#', escape_char='~', array_websafety=None,
+                 skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True,
+                 indent=None, separators=None, encoding='utf-8', sort_keys=False):
         self.reserved_initial_chars = reserved_initial_chars
         self.escape_char = escape_char
+        if array_websafety and array_websafety not in ('exception', 'prefix'):
+            raise ValueError("array_websafety must be blank, 'exception' or 'prefix'")
+        self.array_websafety = array_websafety
+        self.websafety_prefix = ")]}',\n"  # prefix used by AngularJS - https://docs.angularjs.org/api/ng/service/$http
+
+        self.skipkeys = skipkeys
+        self.ensure_ascii = ensure_ascii
+        self.check_circular = check_circular
+        self.allow_nan = allow_nan
+        self.indent = indent
+        self.separators = separators
+        self.encoding = encoding
+        self.sort_keys = sort_keys
 
         self._serialisers = list()  # list of tuples ( Class , function that converts the object to a dict )
         self._deserialisers = list()  # list of tuples ( #name , function that returns the object )
@@ -87,19 +102,35 @@ class JsonteSerialiser(object):
         self.add_type_serialiser(bytearray, binary_serialiser)
         self.add_type_deserialiser('#bin', binary_deserialiser)
 
-    def dump(self, obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
-             allow_nan=True, indent=None, separators=None, encoding='utf-8', sort_keys=False):
-        iterable = _JsonteEncoder(self, skipkeys=skipkeys, ensure_ascii=ensure_ascii,
-                                  check_circular=check_circular, allow_nan=allow_nan, indent=indent,
-                                  separators=separators, encoding=encoding, sort_keys=sort_keys).iterencode(obj)
+    def dump(self, obj, fp):
+        if self.array_websafety and isinstance(obj, list):
+            if self.array_websafety == 'exception':
+                raise RuntimeError('passed a list with array_websafety set to exception')
+            elif self.array_websafety == 'prefix':
+                fp.write(self.websafety_prefix)
+            else:
+                raise RuntimeError('invalid array_websafety value')
+        iterable = _JsonteEncoder(self, skipkeys=self.skipkeys, ensure_ascii=self.ensure_ascii,
+                                  check_circular=self.check_circular, allow_nan=self.allow_nan, indent=self.indent,
+                                  separators=self.separators, encoding=self.encoding,
+                                  sort_keys=self.sort_keys).iterencode(obj)
         for chunk in iterable:
             fp.write(chunk)
 
-    def dumps(self, obj, skipkeys=False, ensure_ascii=True, check_circular=True,
-              allow_nan=True, indent=None, separators=None, encoding='utf-8', sort_keys=False):
-        return _JsonteEncoder(self, skipkeys=skipkeys, ensure_ascii=ensure_ascii,
-                              check_circular=check_circular, allow_nan=allow_nan, indent=indent,
-                              separators=separators, encoding=encoding, sort_keys=sort_keys).encode(obj)
+    def dumps(self, obj):
+        raw_json_str = _JsonteEncoder(self, skipkeys=self.skipkeys, ensure_ascii=self.ensure_ascii,
+                                      check_circular=self.check_circular, allow_nan=self.allow_nan, indent=self.indent,
+                                      separators=self.separators, encoding=self.encoding,
+                                      sort_keys=self.sort_keys).encode(obj)
+        if self.array_websafety and isinstance(obj, list):
+            if self.array_websafety == 'exception':
+                raise RuntimeError('passed a list with array_websafety set to exception')
+            elif self.array_websafety == 'prefix':
+                return self.websafety_prefix + raw_json_str
+            else:
+                raise RuntimeError('invalid array_websafety value')
+        else:
+            return raw_json_str
 
     def load(self, fp, encoding=None, cls=None, parse_float=None, parse_int=None, parse_constant=None, **kw):
         return json.load(fp, encoding=encoding, cls=cls, object_hook=self._jsonte_objecthook,

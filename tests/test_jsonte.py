@@ -10,6 +10,7 @@ Tests for `jsonte` module.
 
 import datetime
 import decimal
+import exceptions
 import tempfile
 import unittest
 
@@ -130,6 +131,20 @@ class TestNoEscape(unittest.TestCase):
         self.assertEqual(via_json, {'#num': 'aaa'})
         with self.assertRaises(decimal.InvalidOperation):
             self.serialiser.loads(jsonte_str)
+
+class TestWebsafety(unittest.TestCase):
+    def test_raise_exception(self):
+        serialiser = jsonte.JsonteSerialiser(array_websafety='exception')
+        data = ['a', 'list']
+        with self.assertRaises(exceptions.RuntimeError):
+            serialiser.dumps(data)
+
+    def test_prefix(self):
+        serialiser = jsonte.JsonteSerialiser(array_websafety='prefix')
+        data = ['a', 'list']
+        jsonte_str = serialiser.dumps(data)
+        first_line = jsonte_str.splitlines()[0]
+        self.assertEqual(first_line, ")]}',")
 
 
 if __name__ == '__main__':
