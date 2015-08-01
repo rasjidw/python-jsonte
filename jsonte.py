@@ -2,10 +2,12 @@
 import base64
 import decimal
 import datetime
+import inspect
 import json
 
 # 3rd party
 import dateutil.parser
+import sdag2
 
 __all__ = ['PreEscapedKeysMixin', 'SerialisationDict', 'JsonteSerialiser']
 
@@ -51,11 +53,13 @@ class JsonteSerialiser(object):
         self.sort_keys = sort_keys
         self.custom_objecthook = custom_objecthook
 
+        self._finalised = True
         self._serialisers = list()  # list of tuples ( Class , function that converts the object to a dict )
         self._deserialisers = list()  # list of tuples ( #name , function that returns the object )
         self._names = set()
         self._type_classes = set()
         self._add_standard_types()
+        self.finalise_serialisers()
 
     def get_type_classes(self):
         return self._type_classes
@@ -72,13 +76,39 @@ class JsonteSerialiser(object):
               correct serialisation the serialiser for datetime.datetime must be added first.
         """
 
-        # FIXME: We can probably lift the requirement on ordering by using a digraph / partial order sort
-        # See https://pypi.python.org/pypi/digraphtools for one possible option?
-
         if obj_cls in self._type_classes:
             raise ValueError('class %s already added' % obj_cls.__name__)
         self._type_classes.add(obj_cls)
         self._serialisers.append((obj_cls, obj_to_jsontedict_func))
+        self._finalised = False
+
+    def finalise_serialisers(self):
+        cls_to_vertex_name = dict()  # cls -> vertex name
+        vertex_name_to_cls = dict()  # vertex name -> cls
+        cls_to_vertex = dict()
+
+        directed_graph = sdag2.DAG()
+        for obj_cls in self._type_classes:
+            vertex_name = '%s:%s' % (obj_cls.__name__, id(obj_cls))
+            cls_to_vertex_name[obj_cls] = vertex_name
+            vertex_name_to_cls[vertex_name] = obj_cls
+            vertex = directed_graph.add(vertex_name)
+            cls_to_vertex[obj_cls] = vertex
+
+        for obj_cls in self._type_classes:
+            superclasses = set(inspect.getmro(obj_cls)).intersection(self._type_classes)
+            for supercls in superclasses:
+                if supercls is not obj_cls:
+                    directed_graph.add_edge(cls_to_vertex[obj_cls], cls_to_vertex[supercls])
+
+        cls_to_func_map = dict(self._serialisers)
+        new_serialisers_list = list()
+        for vertex_name in directed_graph.topologicaly():
+            obj_cls = vertex_name_to_cls[vertex_name]
+            func = cls_to_func_map[obj_cls]
+            new_serialisers_list.append((obj_cls, func))
+        self._serialisers = new_serialisers_list
+        self._finalised = True
 
     def add_type_deserialiser(self, name, dict_to_obj_func):
         if not name:
@@ -110,12 +140,16 @@ class JsonteSerialiser(object):
     def _add_standard_types(self):
         self.add_type_serialiser(decimal.Decimal, decimal_serialiser)
         self.add_type_deserialiser('#num', decimal_deserialiser)
+
         self.add_type_serialiser(datetime.datetime, timestamp_serialiser)
         self.add_type_deserialiser('#tstamp', timestamp_deserialiser)
+
         self.add_type_serialiser(datetime.date, date_serialiser)
         self.add_type_deserialiser('#date', date_deserialiser)
+
         self.add_type_serialiser(datetime.time, time_serialiser)
         self.add_type_deserialiser('#time', time_deserialiser)
+
         self.add_type_serialiser(bytearray, binary_serialiser)
         self.add_type_deserialiser('#bin', binary_deserialiser)
 
@@ -159,6 +193,7 @@ class JsonteSerialiser(object):
 
 
 class _JsonteEncoder(json.JSONEncoder):
+    # noinspection PyProtectedMember
     def __init__(self, jsonte_serialiser, skipkeys=False, ensure_ascii=True,
                  check_circular=True, allow_nan=True, sort_keys=False,
                  indent=None, separators=None, encoding='utf-8'):
@@ -166,8 +201,9 @@ class _JsonteEncoder(json.JSONEncoder):
         self.jsonte_serialiser = jsonte_serialiser
         self.chars_to_escape = self.jsonte_serialiser.reserved_initial_chars + self.jsonte_serialiser.escape_char
         self.escape_char = self.jsonte_serialiser.escape_char
-        # noinspection PyProtectedMember
         self.jsonte_type_serialisers = self.jsonte_serialiser._serialisers
+        if not self.jsonte_serialiser._finalised:
+            raise RuntimeError('use of dump or dumps when not JsonteSerialiser not finalised')
         json.JSONEncoder.__init__(self, skipkeys=skipkeys, ensure_ascii=ensure_ascii, check_circular=check_circular,
                                   allow_nan=allow_nan, sort_keys=sort_keys, indent=indent, separators=separators,
                                   encoding=encoding)

@@ -132,6 +132,7 @@ class TestNoEscape(unittest.TestCase):
         with self.assertRaises(decimal.InvalidOperation):
             self.serialiser.loads(jsonte_str)
 
+
 class TestWebsafety(unittest.TestCase):
     def test_raise_exception(self):
         serialiser = jsonte.JsonteSerialiser(array_websafety='exception')
@@ -146,6 +147,7 @@ class TestWebsafety(unittest.TestCase):
         first_line = jsonte_str.splitlines()[0]
         self.assertEqual(first_line, ")]}',")
 
+
 class TestCustomObjectHook(unittest.TestCase):
     def test_custom_objecthook(self):
         class Foo(object):
@@ -157,11 +159,36 @@ class TestCustomObjectHook(unittest.TestCase):
             return None
 
         serialiser = jsonte.JsonteSerialiser(custom_objecthook=foo_hook)
-        data = [{'**foo**': 1}, {'**bar**': 2} ]
+        data = [{'**foo**': 1}, {'**bar**': 2}]
         raw_json = json.dumps(data)
         list_back = serialiser.loads(raw_json)
         self.assertIsInstance(list_back[0], Foo)
         self.assertEqual(list_back[1], {'**bar**': 2})
+
+class TestOrderIndependance(unittest.TestCase):
+    def test_order_independance(self):
+        class Foo(object):
+            pass
+
+        def foo_serialiser(foo_inst):
+            dct = jsonte.SerialisationDict()
+            dct['#foo'] = 'A foo instance'
+            return dct
+
+        def obj_serialiser(obj_inst):
+            dct = jsonte.SerialisationDict()
+            dct['#obj'] = 'A obj instance'
+            return dct
+
+        serialiser = jsonte.JsonteSerialiser()
+        serialiser.add_type_serialiser(object, obj_serialiser)
+        serialiser.add_type_serialiser(Foo, foo_serialiser)
+        serialiser.finalise_serialisers()
+
+        f = Foo()
+        jsonte_str = serialiser.dumps(f)
+        print jsonte_str
+        self.assertTrue('A foo instance' in jsonte_str)
 
 if __name__ == '__main__':
     unittest.main()
