@@ -165,16 +165,19 @@ class TestCustomObjectHook(unittest.TestCase):
         self.assertIsInstance(list_back[0], Foo)
         self.assertEqual(list_back[1], {'**bar**': 2})
 
+
 class TestOrderIndependance(unittest.TestCase):
     def test_order_independance(self):
         class Foo(object):
             pass
 
+        # noinspection PyUnusedLocal
         def foo_serialiser(foo_inst):
             dct = jsonte.SerialisationDict()
             dct['#foo'] = 'A foo instance'
             return dct
 
+        # noinspection PyUnusedLocal
         def obj_serialiser(obj_inst):
             dct = jsonte.SerialisationDict()
             dct['#obj'] = 'A obj instance'
@@ -189,6 +192,7 @@ class TestOrderIndependance(unittest.TestCase):
         jsonte_str = serialiser.dumps(f)
         print jsonte_str
         self.assertTrue('A foo instance' in jsonte_str)
+
 
 if __name__ == '__main__':
     unittest.main()
