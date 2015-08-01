@@ -68,12 +68,6 @@ class JsonteSerialiser(object):
         """
         :param obj_cls: The class to serialise
         :param obj_to_jsontedict_func: A function that turns an instance of the given class into a jsonte dict
-
-        NOTE: The order that classes are added is important, since the first serialiser found that the object
-              is an instance of will be used.
-
-              For example, a datetime.datetime instance is both a datetime.datetime, and a datetime.date, so for
-              correct serialisation the serialiser for datetime.datetime must be added first.
         """
 
         if obj_cls in self._type_classes:
