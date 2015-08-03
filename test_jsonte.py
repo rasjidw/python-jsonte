@@ -54,9 +54,7 @@ class TestJsonte(unittest.TestCase):
     def test_escape_tilde(self):
         data = {u'~foo': u'bar'}
         jsonte_str = self.serialiser.dumps(data)
-        print('jsonte_str: ' + jsonte_str)
         round_trip = self.serialiser.loads(jsonte_str)
-        print(round_trip)
         via_json = json.loads(jsonte_str)
         self.assertEqual(data, round_trip)
         self.assertEqual(via_json, {u'~~foo': 'bar'})
