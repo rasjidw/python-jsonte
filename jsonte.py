@@ -8,6 +8,7 @@ import json
 # 3rd party
 import dateutil.parser
 import sdag2
+from six import string_types
 
 __all__ = ['PreEscapedKeysMixin', 'SerialisationDict', 'JsonteSerialiser']
 
@@ -21,9 +22,9 @@ class SerialisationDict(dict, PreEscapedKeysMixin):
 
 
 class JsonteSerialiser(object):
-    def __init__(self, reserved_initial_chars='#', escape_char='~', array_websafety=None, custom_objecthook=None,
+    def __init__(self, reserved_initial_chars=u'#', escape_char=u'~', array_websafety=None, custom_objecthook=None,
                  skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True,
-                 indent=None, separators=None, encoding='utf-8', sort_keys=False):
+                 indent=None, separators=None, sort_keys=False):
         """
         :param reserved_initial_chars: object keys starting with one of these characters will get escaped
                                        as will keys starting with the escape character
@@ -41,7 +42,7 @@ class JsonteSerialiser(object):
         if array_websafety and array_websafety not in ('exception', 'prefix'):
             raise ValueError("array_websafety must be blank, 'exception' or 'prefix'")
         self.array_websafety = array_websafety
-        self.websafety_prefix = ")]}',\n"  # prefix used by AngularJS - https://docs.angularjs.org/api/ng/service/$http
+        self.websafety_prefix = u")]}',\n"  # prefix used by AngularJS - https://docs.angularjs.org/api/ng/service/$http
 
         self.skipkeys = skipkeys
         self.ensure_ascii = ensure_ascii
@@ -49,7 +50,6 @@ class JsonteSerialiser(object):
         self.allow_nan = allow_nan
         self.indent = indent
         self.separators = separators
-        self.encoding = encoding
         self.sort_keys = sort_keys
         self.custom_objecthook = custom_objecthook
 
@@ -157,16 +157,14 @@ class JsonteSerialiser(object):
                 raise RuntimeError('invalid array_websafety value')
         iterable = _JsonteEncoder(self, skipkeys=self.skipkeys, ensure_ascii=self.ensure_ascii,
                                   check_circular=self.check_circular, allow_nan=self.allow_nan, indent=self.indent,
-                                  separators=self.separators, encoding=self.encoding,
-                                  sort_keys=self.sort_keys).iterencode(obj)
+                                  separators=self.separators, sort_keys=self.sort_keys).iterencode(obj)
         for chunk in iterable:
             fp.write(chunk)
 
     def dumps(self, obj):
         raw_json_str = _JsonteEncoder(self, skipkeys=self.skipkeys, ensure_ascii=self.ensure_ascii,
                                       check_circular=self.check_circular, allow_nan=self.allow_nan, indent=self.indent,
-                                      separators=self.separators, encoding=self.encoding,
-                                      sort_keys=self.sort_keys).encode(obj)
+                                      separators=self.separators, sort_keys=self.sort_keys).encode(obj)
         if self.array_websafety and isinstance(obj, list):
             if self.array_websafety == 'exception':
                 raise RuntimeError('passed a list with array_websafety set to exception')
@@ -190,7 +188,7 @@ class _JsonteEncoder(json.JSONEncoder):
     # noinspection PyProtectedMember
     def __init__(self, jsonte_serialiser, skipkeys=False, ensure_ascii=True,
                  check_circular=True, allow_nan=True, sort_keys=False,
-                 indent=None, separators=None, encoding='utf-8'):
+                 indent=None, separators=None):
         assert isinstance(jsonte_serialiser, JsonteSerialiser)
         self.jsonte_serialiser = jsonte_serialiser
         self.chars_to_escape = self.jsonte_serialiser.reserved_initial_chars + self.jsonte_serialiser.escape_char
@@ -199,8 +197,7 @@ class _JsonteEncoder(json.JSONEncoder):
         if not self.jsonte_serialiser._finalised:
             raise RuntimeError('use of dump or dumps when not JsonteSerialiser not finalised')
         json.JSONEncoder.__init__(self, skipkeys=skipkeys, ensure_ascii=ensure_ascii, check_circular=check_circular,
-                                  allow_nan=allow_nan, sort_keys=sort_keys, indent=indent, separators=separators,
-                                  encoding=encoding)
+                                  allow_nan=allow_nan, sort_keys=sort_keys, indent=indent, separators=separators)
 
     def default(self, obj):
         for cls, obj_to_jsontedict_func in self.jsonte_type_serialisers:
@@ -214,11 +211,11 @@ class _JsonteEncoder(json.JSONEncoder):
     def iterencode(self, obj, _one_shot=False):
         if isinstance(obj, dict) and not isinstance(obj, PreEscapedKeysMixin) and self.jsonte_serialiser.escape_char:
             # prefix any keys starting with something in reserved_initial_chars with the escape char
-            keys_to_escape = [key for key in obj if isinstance(key, basestring) and key[0] in self.chars_to_escape]
+            keys_to_escape = [key for key in obj if isinstance(key, string_types) and key[0] in self.chars_to_escape]
             if keys_to_escape:
                 new_dct = obj.copy()
                 for key in keys_to_escape:
-                    new_dct['%s%s' % (self.escape_char, key)] = new_dct.pop(key)
+                    new_dct[self.escape_char + key] = new_dct.pop(key)
                 return json.JSONEncoder.iterencode(self, new_dct, _one_shot)
         return json.JSONEncoder.iterencode(self, obj, _one_shot)
 
@@ -284,7 +281,7 @@ def time_deserialiser(dct):
 # binary  ( python bytearray - 2.6 and higher )
 def binary_serialiser(bin_data):
     dct = SerialisationDict()
-    dct['#bin'] = base64.b64encode(bin_data)
+    dct[u'#bin'] = base64.b64encode(bin_data).decode('ascii')
     return dct
 
 

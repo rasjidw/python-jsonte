@@ -10,13 +10,12 @@ Tests for `jsonte` module.
 
 import datetime
 import decimal
-import exceptions
-import tempfile
+import json
 import unittest
 
 import dateutil.tz
+from six import StringIO
 
-import json
 import jsonte
 
 
@@ -47,88 +46,89 @@ class TestJsonte(unittest.TestCase):
         self.assertTrue(isinstance(number2, decimal.Decimal))
 
     def test_binary(self):
-        binary = bytearray('Hello World!\x00\x01\x02')
+        binary = bytearray('Hello World!\x00\x01\x02', encoding='ascii')
         binary2 = self.serialiser.loads(self.serialiser.dumps(binary))
         self.assertEqual(binary, binary2)
         self.assertTrue(isinstance(binary2, bytearray))
 
     def test_escape_tilde(self):
-        data = {'~foo': 'bar'}
+        data = {u'~foo': u'bar'}
         jsonte_str = self.serialiser.dumps(data)
         round_trip = self.serialiser.loads(jsonte_str)
         via_json = json.loads(jsonte_str)
         self.assertEqual(data, round_trip)
-        self.assertEqual(via_json, {'~~foo': 'bar'})
+        self.assertEqual(via_json, {u'~~foo': 'bar'})
 
     def test_hash_escape(self):
-        data = {'#foo': 'bar'}
+        data = {u'#foo': 'bar'}
         jsonte_str = self.serialiser.dumps(data)
         round_trip = self.serialiser.loads(jsonte_str)
         via_json = json.loads(jsonte_str)
         self.assertEqual(data, round_trip)
-        self.assertEqual(via_json, {'~#foo': 'bar'})
+        self.assertEqual(via_json, {u'~#foo': u'bar'})
 
     def test_not_escaped(self):
-        data = {'*foo': 'bar'}
+        data = {u'*foo': u'bar'}
         via_json = json.loads(self.serialiser.dumps(data))
         self.assertEqual(via_json, data)
 
     def test_dump_and_load(self):
-        data = {'now': datetime.datetime.now(),
-                'number': decimal.Decimal('10.00'),
-                '#escape': 'test',
-                '~tilde_test': 'aaa',
-                'binary': bytearray('\x00\x01')
+        data = {u'now': datetime.datetime.now(),
+                u'number': decimal.Decimal('10.00'),
+                u'#escape': u'test',
+                u'~tilde_test': u'aaa',
+                u'binary': bytearray(b'\x00\x01')
                 }
-        with tempfile.TemporaryFile() as fp:
-            self.serialiser.dump(data, fp)
-            fp.seek(0)
-            round_trip = self.serialiser.load(fp)
-            self.assertEqual(data, round_trip)
+        fp = StringIO()
+        self.serialiser.dump(data, fp)
+        fp.seek(0)
+        round_trip = self.serialiser.load(fp)
+        self.assertEqual(data, round_trip)
+        fp.close()
 
 
 class TestCustomEscape(unittest.TestCase):
     def setUp(self):
         self.serialiser = jsonte.JsonteSerialiser()
-        self.serialiser.reserved_initial_chars += '*'
+        self.serialiser.reserved_initial_chars += u'*'
 
     def test_custom_escape(self):
-        data = {'*foo': 'bar'}
+        data = {u'*foo': u'bar'}
         jsonte_str = self.serialiser.dumps(data)
         round_trip = self.serialiser.loads(jsonte_str)
         via_json = json.loads(jsonte_str)
         self.assertEqual(data, round_trip)
-        self.assertEqual(via_json, {'~*foo': 'bar'})
+        self.assertEqual(via_json, {u'~*foo': u'bar'})
 
 
 class TestNoEscape(unittest.TestCase):
     def setUp(self):
-        self.serialiser = jsonte.JsonteSerialiser(escape_char='')
+        self.serialiser = jsonte.JsonteSerialiser(escape_char=u'')
 
     def test_no_escape_simple(self):
-        data = {'#foo': 'bar'}
+        data = {u'#foo': u'bar'}
         jsonte_str = self.serialiser.dumps(data)
         round_trip = self.serialiser.loads(jsonte_str)
         via_json = json.loads(jsonte_str)
         self.assertEqual(data, round_trip)
-        self.assertEqual(via_json, {'#foo': 'bar'})
+        self.assertEqual(via_json, {u'#foo': u'bar'})
 
     def test_no_escape_complex(self):
-        data = {'now': datetime.datetime.now(),
-                'number': decimal.Decimal('10.00'),
-                '#escape': 'test',
-                '~tilde_test': 'aaa',
-                'binary': bytearray('\x00\x01')
+        data = {u'now': datetime.datetime.now(),
+                u'number': decimal.Decimal('10.00'),
+                u'#escape': u'test',
+                u'~tilde_test': u'aaa',
+                u'binary': bytearray(b'\x00\x01')
                 }
         jsonte_str = self.serialiser.dumps(data)
         round_trip = self.serialiser.loads(jsonte_str)
         self.assertEqual(data, round_trip)
 
     def test_round_trip_fail(self):
-        data = {'#num': 'aaa'}
+        data = {u'#num': u'aaa'}
         jsonte_str = self.serialiser.dumps(data)
         via_json = json.loads(jsonte_str)
-        self.assertEqual(via_json, {'#num': 'aaa'})
+        self.assertEqual(via_json, {u'#num': u'aaa'})
         with self.assertRaises(decimal.InvalidOperation):
             self.serialiser.loads(jsonte_str)
 
@@ -136,16 +136,16 @@ class TestNoEscape(unittest.TestCase):
 class TestWebsafety(unittest.TestCase):
     def test_raise_exception(self):
         serialiser = jsonte.JsonteSerialiser(array_websafety='exception')
-        data = ['a', 'list']
-        with self.assertRaises(exceptions.RuntimeError):
+        data = [u'a', u'list']
+        with self.assertRaises(RuntimeError):
             serialiser.dumps(data)
 
     def test_prefix(self):
         serialiser = jsonte.JsonteSerialiser(array_websafety='prefix')
-        data = ['a', 'list']
+        data = [u'a', u'list']
         jsonte_str = serialiser.dumps(data)
         first_line = jsonte_str.splitlines()[0]
-        self.assertEqual(first_line, ")]}',")
+        self.assertEqual(first_line, u")]}',")
 
 
 class TestCustomObjectHook(unittest.TestCase):
@@ -154,16 +154,16 @@ class TestCustomObjectHook(unittest.TestCase):
             pass
 
         def foo_hook(dct):
-            if '**foo**' in dct:
+            if u'**foo**' in dct:
                 return Foo()
             return None
 
         serialiser = jsonte.JsonteSerialiser(custom_objecthook=foo_hook)
-        data = [{'**foo**': 1}, {'**bar**': 2}]
+        data = [{u'**foo**': 1}, {u'**bar**': 2}]
         raw_json = json.dumps(data)
         list_back = serialiser.loads(raw_json)
         self.assertIsInstance(list_back[0], Foo)
-        self.assertEqual(list_back[1], {'**bar**': 2})
+        self.assertEqual(list_back[1], {u'**bar**': 2})
 
 
 class TestOrderIndependance(unittest.TestCase):
@@ -174,13 +174,13 @@ class TestOrderIndependance(unittest.TestCase):
         # noinspection PyUnusedLocal
         def foo_serialiser(foo_inst):
             dct = jsonte.SerialisationDict()
-            dct['#foo'] = 'A foo instance'
+            dct[u'#foo'] = u'A foo instance'
             return dct
 
         # noinspection PyUnusedLocal
         def obj_serialiser(obj_inst):
             dct = jsonte.SerialisationDict()
-            dct['#obj'] = 'A obj instance'
+            dct[u'#obj'] = u'A obj instance'
             return dct
 
         serialiser = jsonte.JsonteSerialiser()
@@ -190,8 +190,7 @@ class TestOrderIndependance(unittest.TestCase):
 
         f = Foo()
         jsonte_str = serialiser.dumps(f)
-        print jsonte_str
-        self.assertTrue('A foo instance' in jsonte_str)
+        self.assertTrue(u'A foo instance' in jsonte_str)
 
 
 if __name__ == '__main__':
