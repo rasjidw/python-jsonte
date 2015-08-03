@@ -126,7 +126,7 @@ class JsonteSerialiser(object):
             if obj is not None:
                 return obj
         if self.escape_char:
-            for key in dct.keys():   # don't iterate - must use .keys() here, since we are modifying the keys in place
+            for key in list(dct.keys()):   # don't iterate - must use a list since we are modifying the keys in place
                 if key[0] == self.escape_char:
                     dct[key[1:]] = dct.pop(key)
         return dct
