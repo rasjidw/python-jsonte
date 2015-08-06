@@ -129,16 +129,14 @@ class TestNoEscape(unittest.TestCase):
         jsonte_str = self.serialiser.dumps(data)
         via_json = json.loads(jsonte_str)
         self.assertEqual(via_json, {u'#num': u'aaa'})
-        with self.assertRaises(decimal.InvalidOperation):
-            self.serialiser.loads(jsonte_str)
+        self.assertRaises(decimal.InvalidOperation, self.serialiser.loads, jsonte_str)
 
 
 class TestWebsafety(unittest.TestCase):
     def test_raise_exception(self):
         serialiser = jsonte.JsonteSerialiser(array_websafety='exception')
         data = [u'a', u'list']
-        with self.assertRaises(RuntimeError):
-            serialiser.dumps(data)
+        self.assertRaises(RuntimeError, serialiser.dumps, data)
 
     def test_prefix(self):
         serialiser = jsonte.JsonteSerialiser(array_websafety='prefix')
@@ -162,7 +160,7 @@ class TestCustomObjectHook(unittest.TestCase):
         data = [{u'**foo**': 1}, {u'**bar**': 2}]
         raw_json = json.dumps(data)
         list_back = serialiser.loads(raw_json)
-        self.assertIsInstance(list_back[0], Foo)
+        self.assertTrue(isinstance(list_back[0], Foo))
         self.assertEqual(list_back[1], {u'**bar**': 2})
 
     def test_complex_custom_objecthook(self):
@@ -179,9 +177,9 @@ class TestCustomObjectHook(unittest.TestCase):
         serialiser = jsonte.JsonteSerialiser(custom_objecthook=bar_hook)
         data = {'*bar*': None, 'date': {'#date': '2001-01-01'}, 'value': {'#num': '42.00'}}
         bar = serialiser.loads(json.dumps(data))
-        self.assertIsInstance(bar, Bar)
+        self.assertTrue(isinstance(bar, Bar))
         self.assertEqual(bar.date, datetime.date(2001, 1, 1))
-        self.assertIsInstance(bar.value, decimal.Decimal)
+        self.assertTrue(isinstance(bar.value, decimal.Decimal))
         self.assertEqual(bar.value, decimal.Decimal('42.00'))
 
 

@@ -208,7 +208,7 @@ class _JsonteEncoder(json.JSONEncoder):
                 return value
         return json.JSONEncoder.default(self, obj)
 
-    def iterencode(self, obj, _one_shot=False):
+    def iterencode(self, obj):
         if isinstance(obj, dict) and not isinstance(obj, PreEscapedKeysMixin) and self.jsonte_serialiser.escape_char:
             # prefix any keys starting with something in reserved_initial_chars with the escape char
             keys_to_escape = [key for key in obj if isinstance(key, string_types) and key[0] in self.chars_to_escape]
@@ -216,8 +216,8 @@ class _JsonteEncoder(json.JSONEncoder):
                 new_dct = obj.copy()
                 for key in keys_to_escape:
                     new_dct[self.escape_char + key] = new_dct.pop(key)
-                return json.JSONEncoder.iterencode(self, new_dct, _one_shot)
-        return json.JSONEncoder.iterencode(self, obj, _one_shot)
+                return json.JSONEncoder.iterencode(self, new_dct)
+        return json.JSONEncoder.iterencode(self, obj)
 
 
 # ---- inbuilt types 
@@ -281,7 +281,7 @@ def time_deserialiser(dct):
 # binary  ( python bytearray - 2.6 and higher )
 def binary_serialiser(bin_data):
     dct = SerialisationDict()
-    dct[u'#bin'] = base64.b64encode(bin_data).decode('ascii')
+    dct[u'#bin'] = base64.b64encode(bytes(bin_data)).decode('ascii')
     return dct
 
 
