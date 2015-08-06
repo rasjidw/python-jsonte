@@ -165,6 +165,25 @@ class TestCustomObjectHook(unittest.TestCase):
         self.assertIsInstance(list_back[0], Foo)
         self.assertEqual(list_back[1], {u'**bar**': 2})
 
+    def test_complex_custom_objecthook(self):
+        class Bar(object):
+            def __init__(self, date, value):
+                self.date = date
+                self.value = value
+
+        def bar_hook(dct):
+            if u'*bar*' in dct:
+                return Bar(dct.get('date'), dct.get('value'))
+            return None
+
+        serialiser = jsonte.JsonteSerialiser(custom_objecthook=bar_hook)
+        data = {'*bar*': None, 'date': {'#date': '2001-01-01'}, 'value': {'#num': '42.00'}}
+        bar = serialiser.loads(json.dumps(data))
+        self.assertIsInstance(bar, Bar)
+        self.assertEqual(bar.date, datetime.date(2001, 1, 1))
+        self.assertIsInstance(bar.value, decimal.Decimal)
+        self.assertEqual(bar.value, decimal.Decimal('42.00'))
+
 
 class TestOrderIndependance(unittest.TestCase):
     def test_order_independance(self):
