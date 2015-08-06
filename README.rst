@@ -16,7 +16,7 @@ The primary goal is to add support for data types that are commonly used in data
 * binary data
 
 A secondary goal was to do this in such a way that the resulting json was easily human readable, and
-also language agnostic.
+also programming language agnostic.
 
 The format is simple, and is always itself valid json.
 
@@ -69,8 +69,9 @@ The python implementation is designed to be a drop-in replacement for the standa
             '#num': 1,
             '~baz': 2.0 }
 
-   s = jsonte.dumps(data, indent=4, sort_keys=True)
-   data2 = jsonte.loads(s)
+   serialiser = jsonte.JsonteSerialiser(indent=4, sort_keys=True)
+   s = serialiser.dumps(data)
+   data2 = serialiser.loads(s)
 
 At this point we have
 
