@@ -3,6 +3,10 @@
 History
 -------
 
+0.8.5 (2015-08-09)
+------------------
+* Bugfix: fix an issue when _one_shot was used in iterencode in non-2.6 versions of Python
+
 0.8.4 (2015-08-06)
 ------------------
 * Major reworking

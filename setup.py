@@ -25,7 +25,7 @@ test_requirements = [
 
 setup(
     name='jsonte',
-    version='0.8.4',
+    version='0.8.5',
     description="Json Type Extensions.",
     long_description=readme + '\n\n' + history,
     author="Rasjid Wilcox",
