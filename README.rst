@@ -1,6 +1,6 @@
-=====================
-Json Type Extensions.
-=====================
+=============================
+Jsonte (Json Type Extensions)
+=============================
 
 * Free software: Simplified BSD license
 
