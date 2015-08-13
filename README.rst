@@ -42,7 +42,7 @@ Key Escaping
 Keys in objects that start with either a hash (#) or a tidle (~) are escaped by a tidle (~) being prefixed to the key.
 This is to avoid any accidental collisions with the 'special' object keys used.
 
-So an object that would be encoded as { "#bin": 1234 } normally would become { "~#bin": 1234 } when encoded by jsonte,
+So an object that would normaly be encoded as { "#bin": 1234 } would become { "~#bin": 1234 } when encoded by jsonte,
 and { "~foo": "bar" } would become { "~~foo": "bar" }
 
 
