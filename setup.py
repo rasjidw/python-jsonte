@@ -35,7 +35,7 @@ setup(
     install_requires=requirements,
     license="BSD",
     zip_safe=False,
-    keywords='jsonte',
+    keywords='jsonte json',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
