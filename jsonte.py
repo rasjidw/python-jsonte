@@ -81,6 +81,7 @@ class JsonteSerialiser(object):
         vertex_name_to_cls = dict()  # vertex name -> cls
         cls_to_vertex = dict()
 
+        # a directed graph is used so that the order that the serialisers are added does not matter
         directed_graph = sdag2.DAG()
         for obj_cls in self._type_classes:
             vertex_name = '%s:%s' % (obj_cls.__name__, id(obj_cls))
