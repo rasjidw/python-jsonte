@@ -25,7 +25,7 @@ test_requirements = [
 
 setup(
     name='jsonte',
-    version='0.8.5',
+    version='0.8.6',
     description="A simple way of 'extending' json to support additional types like datetime, Decimal and binary data.",
     long_description=readme + '\n\n' + history,
     author="Rasjid Wilcox",
@@ -45,6 +45,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
     test_suite='test_jsonte',
     tests_require=test_requirements

@@ -3,6 +3,10 @@
 History
 -------
 
+0.8.6 (2016-04-13)
+------------------
+* Update README, setup.py and tox.ini to indicate Python 3.5 support.
+
 0.8.5 (2015-08-09)
 ------------------
 * Bugfix: fix an issue when _one_shot was used in iterencode in non-2.6 versions of Python

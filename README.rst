@@ -49,7 +49,8 @@ and { "~foo": "bar" } would become { "~~foo": "bar" }
 Python Implementation
 ---------------------
 
-The python implementation is designed to be a drop-in replacement for the standard json library.
+The python implementation is designed to be a drop-in replacement for the standard json library, and is tested on
+Python 2.6, 2.7 and 3.3+.
 
 ::
 
