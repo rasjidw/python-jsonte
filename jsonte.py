@@ -180,8 +180,8 @@ class JsonteSerialiser(object):
         return json.load(fp, encoding=encoding, cls=cls, object_hook=self._jsonte_objecthook,
                          parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
 
-    def loads(self, s, encoding=None, cls=None, parse_float=None, parse_int=None, parse_constant=None, **kw):
-        return json.loads(s, encoding=encoding, cls=cls, object_hook=self._jsonte_objecthook,
+    def loads(self, s, cls=None, parse_float=None, parse_int=None, parse_constant=None, **kw):
+        return json.loads(s, cls=cls, object_hook=self._jsonte_objecthook,
                           parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant, **kw)
 
 
